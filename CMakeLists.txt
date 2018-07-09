@@ -20,7 +20,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(
-    cppwarc
+    warc-c
     VERSION 0.0.0
     LANGUAGES C CXX
     )
@@ -47,9 +47,9 @@ set_property(CACHE BUILD_DOCS PROPERTY STRINGS ON OFF)
 
 include_directories(${INCLUDE_DIR})
 
-file(GLOB INCLUDE_FILES ${INCLUDE_DIR}/*.hpp)
+file(GLOB INCLUDE_FILES ${INCLUDE_DIR}/*.h)
 
-file(GLOB LIB_SRCS ${SRC_DIR}/*.cpp)
+file(GLOB LIB_SRCS ${SRC_DIR}/*.c)
 
 # CFLAGS
 
@@ -90,30 +90,38 @@ mark_as_advanced(
     )
 
 # Outputs
-find_package(BISON)
-BISON_TARGET(WarcParser ${SRC_DIR}/warc.y ${SRC_DIR}/warc-parser.cpp)
 find_package(FLEX)
-FLEX_TARGET(WarcLexer ${SRC_DIR}/warc.lex ${SRC_DIR}/warc-lexer.cpp)
+FLEX_TARGET(WarcLexer ${SRC_DIR}/warc.lex ${SRC_DIR}/warc.lex.c)
+find_package(BISON)
+BISON_TARGET(WarcParser ${SRC_DIR}/warc.y ${SRC_DIR}/warc.tab.c)
 
-add_library(${PROJECT_NAME}-shared SHARED ${LIB_SRCS} ${BISON_WarcParser_OUTPUTS})
+add_library(${PROJECT_NAME}-shared SHARED ${LIB_SRCS}
+    ${BISON_WarcParser_OUTPUTS} ${FLEX_WarcLexer_OUTPUTS})
 set_target_properties(${PROJECT_NAME}-shared PROPERTIES
     OUTPUT_NAME ${PROJECT_NAME})
 set_target_properties(${PROJECT_NAME}-shared PROPERTIES
     SOVERSION ${PROJECT_VERSION_MAJOR})
 set_property(TARGET ${PROJECT_NAME}-shared PROPERTY CXX_STANDARD 14)
 
-add_library(${PROJECT_NAME}-static STATIC ${LIB_SRCS} ${BISON_WarcParser_OUTPUTS})
+add_library(${PROJECT_NAME}-static STATIC ${LIB_SRCS}
+    ${BISON_WarcParser_OUTPUTS} ${FLEX_WarcLexer_OUTPUTS})
 set_target_properties(${PROJECT_NAME}-static PROPERTIES
     OUTPUT_NAME ${PROJECT_NAME})
 set_property(TARGET ${PROJECT_NAME}-static PROPERTY CXX_STANDARD 14)
 
+add_executable(${PROJECT_NAME}-bin main.c)
+set_target_properties(${PROJECT_NAME}-bin PROPERTIES
+    OUTPUT_NAME ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}-bin PRIVATE
+    ${PROJECT_NAME}-static)
+
 # Lints
 
-add_custom_target(clang-tidy COMMAND clang-tidy ${SRC_DIR}/*.cpp
+add_custom_target(clang-tidy COMMAND clang-tidy ${SRC_DIR}/*.c
     -- -std=c++14 -I${INCLUDE_DIR})
 
 add_custom_target(clang-format COMMAND clang-format -i -style=file
-    ${SRC_DIR}/*.cpp ${TEST_DIR}/*.cpp ${INCLUDE_DIR}/*.hpp)
+    ${SRC_DIR}/*.c ${TEST_DIR}/*.c ${INCLUDE_DIR}/*.h)
 
 # Docs
 
