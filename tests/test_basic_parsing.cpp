@@ -18,9 +18,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <cstdio>
 #include <gtest/gtest.h>
 
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+extern "C" {
+#include <warc.h>
+}
+
+#include "util.hpp"
+
+TEST(SimpleWarcFile, first) {
+  struct warc_entry *entry = NULL;
+  FILE *f = fopen(TEST_FILES_EXAMPLES "/test.warc", "r");
+  if (f) {
+    entry = warc_parse_file(f);
+    ASSERT_TRUE(entry);
+    ASSERT_EQ(strcmp(entry->version, "WARC/1.0\r\n"), 0);
+  }
 }

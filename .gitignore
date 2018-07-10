@@ -32,5 +32,5 @@
 *.app
 
 # Generated files
-src/*.tab.c
-src/*.lex.c
+src/*.tab.[ch]
+src/*.lex.[ch]

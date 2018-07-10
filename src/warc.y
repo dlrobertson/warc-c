@@ -19,87 +19,74 @@
  * SOFTWARE.
  */
 
-%option prefix="warcyy"
-%option noinput nounput noyywrap nodefault
-%option bison-bridge reentrant
-%option header-file="src/warc.lex.h"
-
 %{
-#include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 #include <warc.h>
 #include "warc.tab.h"
-
 #define YYSTYPE WARCYYSTYPE
+#include "warc.lex.h"
 %}
 
-TOKEN [\x21-\x39\x3b-\x7e]
-TEXT [\x20-\x7e]
-TEXTLWS [\x20-\x7e]
-LWS \r\n*[\t ]*
-CRLF \r\n
-WS [\t ]*
+%define api.pure full
+%define parse.trace
+%define parse.error verbose
+%define api.prefix {warcyy}
+%lex-param {void* scanner}
+%parse-param {void* scanner}{struct warc_entry* mod}
 
-%x HEADER
-%x HEADER_VALUE
-%x BODY
+%union {
+  const char* str;
+  u_int8_t* bytes;
+}
+
+/* Well known token strings */
+%token CRLF COLON END_OF_FILE
+
+%token VERSION
+%token BLOCK
+%token TOKEN TEXT
+
+%type<str> VERSION
+
+/*
+FIXME(dlrobertson): Add this to add WARC file parsing. This should probably
+go in a separate parser?
+
+warc_file:
+  { printf("bison: EMPTY\n"); }|
+  warc_record { printf("bison: warc_record\n"); } END_OF_FILE |
+  warc_record warc_record END_OF_FILE
+  ;
+*/
 
 %%
 
-{CRLF} {
-  printf("CRLF\n");
-  BEGIN(HEADER);
-  return CRLF;
-}
+warc_record:
+  header CRLF BLOCK { printf("bison: warc_record!!!!!!!!!!\n"); }
+  ;
 
-^WARC"/"1.0 {
-  yylval->str = yytext;
-  return VERSION;
-}
+header:
+  version warc_fields CRLF { printf("bison: HEADER complete!\n"); }
+  ;
 
-<<EOF>> {
-  return END_OF_FILE;
-}
+version:
+  VERSION CRLF { mod->version = strdup($1); }
+  ;
 
-<HEADER>{CRLF} {
-  BEGIN(BODY);
-  return CRLF;
-}
+warc_fields:
+  warc_fields CRLF named_field { printf("bison: two warc fields\n"); } |
+  named_field { printf("bison: named field!\n"); }
+  ;
 
-<HEADER>{TOKEN}+ {
-  return TOKEN;
-}
+named_field:
+  field_name COLON { printf("bison: field_name no text\n"); } |
+  field_name COLON TEXT { printf("bison field_name with text\n"); }
+  ;
 
-<HEADER>:{WS} {
-  BEGIN(HEADER_VALUE);
-  return COLON;
-}
-
-<HEADER_VALUE>{CRLF} {
-  BEGIN(HEADER);
-  return CRLF;
-}
-
-<HEADER_VALUE>{TEXT}+ {
-  return TEXT;
-}
-
-<BODY>.*{CRLF}{CRLF} {
-  BEGIN(INITIAL);
-  return BLOCK;
-}
-
-<BODY>. {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
-}
-
-<HEADER_VALUE>. {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
-}
-
-.|\n {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
-}
+field_name:
+  TOKEN { printf("bison: field_name\n"); }
+  ;
 
 %%
