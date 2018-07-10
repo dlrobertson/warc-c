@@ -31,5 +31,6 @@
 *.out
 *.app
 
-# Generated file
-include/cppwarc.hpp
+# Generated files
+src/*.tab.c
+src/*.lex.c
