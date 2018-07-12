@@ -47,7 +47,7 @@ set_property(CACHE BUILD_DOCS PROPERTY STRINGS ON OFF)
 
 include_directories(${INCLUDE_DIR})
 
-file(GLOB INCLUDE_FILES ${INCLUDE_DIR}/*.h)
+file(GLOB INCLUDE_FILES ${INCLUDE_DIR}/${PROJECT_NAME}/*.h)
 
 file(GLOB LIB_SRCS ${SRC_DIR}/*.c)
 
@@ -91,7 +91,7 @@ mark_as_advanced(
 
 # Outputs
 find_package(FLEX)
-FLEX_TARGET(WarcLexer ${SRC_DIR}/warc.lex ${SRC_DIR}/warc.lex.c)
+FLEX_TARGET(WarcLexer ${SRC_DIR}/warc.l ${SRC_DIR}/warc.lex.c)
 find_package(BISON)
 BISON_TARGET(WarcParser ${SRC_DIR}/warc.y ${SRC_DIR}/warc.tab.c)
 

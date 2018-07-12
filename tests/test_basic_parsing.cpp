@@ -22,7 +22,7 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-#include <warc.h>
+#include <warc-c/warc-c.h>
 }
 
 #include "util.hpp"

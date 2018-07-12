@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <warc.h>
+#include <warc-c/warc-c.h>
 #include "warc.tab.h"
 
 #define YYSTYPE WARCYYSTYPE

@@ -18,108 +18,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
 
-#include <warc.h>
-
-#include "warc.tab.h"
-#define YYSTYPE WARCYYSTYPE
-#include "warc.lex.h"
-
-// FIXME(dlrobertson): This does not work at all.
-struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len) {
-  yyscan_t scanner;
-  YY_BUFFER_STATE buf;
-
-  warcyylex_init(&scanner);
-
-  buf = warcyy_scan_bytes(bytes, len, scanner);
-
-  warcyy_delete_buffer(buf, scanner);
-  warcyylex_destroy(scanner);
-
-  return NULL;
-}
-
-struct warc_entry *warc_parse_file(FILE *f) {
-  yyscan_t scanner;
-  struct warc_entry* entry = malloc(sizeof(struct warc_entry));
-
-  if (!entry || warcyylex_init(&scanner)) {
-    return NULL;
-  } else if (warc_entry_init(entry)) {
-    return NULL;
-  }
-
-  // FIXME(dlroberton): remove this and add a parameter
-  // to enable it.
-  warcyyset_debug(1, scanner);
-
-  warcyyrestart(f, scanner);
-  if (warcyyparse(scanner, entry)) {
-    warcyylex_destroy(scanner);
-    return entry;
-  } else {
-    warc_entry_free(entry);
-    warcyylex_destroy(scanner);
-    return NULL;
-  }
-}
-
-void warcyyerror(const char *s, ...) {
-  va_list ap;
-  va_start(ap, s);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
-}
-
-int warc_entry_init(struct warc_entry *entry) {
-  struct warc_header** headers = malloc(sizeof(struct warc_header*) * WARC_HEADERS_INC);
-  if (headers) {
-    entry->version = NULL;
-    entry->headers.len = 0;
-    entry->headers.cap = WARC_HEADERS_INC;
-    entry->headers.headers = headers;
-    entry->block = NULL;
-    return 0;
-  } else {
-    return -1;
-  }
-}
-
-void warc_entry_free(struct warc_entry *entry) {
-  struct warc_header** tmp;
-  if (entry) {
-    if (entry->version) {
-      free(entry->version);
-    }
-    //FOREACH_HEADER(mod->headers, header) {
-    for(tmp = (entry->headers).headers;
-        tmp < (entry->headers).headers + (entry->headers).len;
-        ++tmp) {
-      warc_header_free(*tmp);
-    }
-    free(entry);
-  }
-}
-
-struct bytes_field* bytes_field_copy(const struct bytes_field* value) {
-  struct bytes_field* hv = malloc(sizeof(struct bytes_field));
-  if (hv && hv->len > 0) {
-    hv->len = value->len;
-    hv->bytes = malloc(hv->len);
-    if (hv->bytes) {
-      memcpy(hv->bytes, value->bytes, hv->len);
-      return hv;
-    } else {
-      free(hv);
-      return NULL;
-    }
-  } else {
-    return NULL;
-  }
-}
+#include <warc-c/bytes_field.h>
+#include <warc-c/warc_headers.h>
 
 struct warc_header* warc_header_create(const char* name, struct bytes_field* value) {
   struct warc_header* header = malloc(sizeof(struct warc_header));
