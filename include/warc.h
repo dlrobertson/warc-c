@@ -23,16 +23,53 @@
 
 #include <stdio.h>
 
+#define WARC_HEADERS_INC 10
+
 void warcyyerror(const char *s, ...);
 
 struct warc_entry *warc_parse_file(FILE *f);
 
 struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len);
 
-struct warc_entry {
-  char *version;
+struct bytes_field {
+  size_t len;
+  u_int8_t* bytes;
 };
 
+struct warc_header {
+  char* name;
+  struct bytes_field* value;
+};
+
+struct warc_headers {
+  struct warc_header** headers;
+  size_t len;
+  size_t cap;
+};
+
+struct warc_entry {
+  char *version;
+  struct warc_headers headers;
+  struct bytes_field *block;
+};
+
+int warc_entry_init(struct warc_entry *entry);
+
 void warc_entry_free(struct warc_entry *mod);
+
+struct warc_header* warc_header_create(const char* name, struct bytes_field* value);
+
+void warc_header_free(struct warc_header *);
+
+struct bytes_field* bytes_field_copy(const struct bytes_field *value);
+
+struct bytes_field* warc_headers_get(struct warc_headers *headers, const char *name);
+
+struct warc_header* warc_headers_find(struct warc_headers *headers, const char *name);
+
+struct warc_header* warc_headers_add(struct warc_headers *headers, const char *name,
+                                     struct bytes_field* value);
+#define FOREACH_HEADER(headers, tmp) \
+    for(tmp = (headers).headers; tmp < (headers).headers + (headers).len; ++tmp)
 
 #endif

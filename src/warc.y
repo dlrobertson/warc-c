@@ -27,6 +27,7 @@
 #include "warc.tab.h"
 #define YYSTYPE WARCYYSTYPE
 #include "warc.lex.h"
+
 %}
 
 %define api.pure full
@@ -37,8 +38,8 @@
 %parse-param {void* scanner}{struct warc_entry* mod}
 
 %union {
-  const char* str;
-  u_int8_t* bytes;
+  char* str;
+  struct bytes_field* bytes;
 }
 
 /* Well known token strings */
@@ -48,7 +49,12 @@
 %token BLOCK
 %token TOKEN TEXT
 
+%type<bytes> TEXT
+%type<str> TOKEN
+%type<str> field_name
 %type<str> VERSION
+%type<bytes> BLOCK
+
 
 /*
 FIXME(dlrobertson): Add this to add WARC file parsing. This should probably
@@ -64,29 +70,35 @@ warc_file:
 %%
 
 warc_record:
-  header CRLF BLOCK { printf("bison: warc_record!!!!!!!!!!\n"); }
+  header CRLF BLOCK { mod->block = $3; }
   ;
 
 header:
-  version warc_fields CRLF { printf("bison: HEADER complete!\n"); }
+  version warc_fields CRLF { }
   ;
 
 version:
-  VERSION CRLF { mod->version = strdup($1); }
+  VERSION CRLF {
+    mod->version = $1;
+  }
   ;
 
 warc_fields:
-  warc_fields CRLF named_field { printf("bison: two warc fields\n"); } |
-  named_field { printf("bison: named field!\n"); }
+  warc_fields CRLF named_field { } |
+  named_field { }
   ;
 
 named_field:
-  field_name COLON { printf("bison: field_name no text\n"); } |
-  field_name COLON TEXT { printf("bison field_name with text\n"); }
+  field_name COLON {
+    warc_headers_add(&mod->headers, $1, NULL);
+  } |
+  field_name COLON TEXT {
+    warc_headers_add(&mod->headers, $1, $3);
+  }
   ;
 
 field_name:
-  TOKEN { printf("bison: field_name\n"); }
+  TOKEN { $$ = $1; }
   ;
 
 %%

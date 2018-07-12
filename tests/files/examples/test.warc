@@ -1,7 +1,7 @@
 WARC/1.0
 Something: Else
-And: This
-And: Anotheer
+And0:
+And1: Another
 
-THIS IS IT!!!
+Hello, World!
 

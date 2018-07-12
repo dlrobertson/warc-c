@@ -48,13 +48,12 @@ WS [\t ]*
 %%
 
 {CRLF} {
-  printf("CRLF\n");
   BEGIN(HEADER);
   return CRLF;
 }
 
 ^WARC"/"1.0 {
-  yylval->str = yytext;
+  yylval->str = strdup(yytext);
   return VERSION;
 }
 
@@ -68,6 +67,7 @@ WS [\t ]*
 }
 
 <HEADER>{TOKEN}+ {
+  yylval->str = strdup(yytext);
   return TOKEN;
 }
 
@@ -82,19 +82,48 @@ WS [\t ]*
 }
 
 <HEADER_VALUE>{TEXT}+ {
-  return TEXT;
+  yylval->bytes = malloc(sizeof(struct bytes_field));
+  if (yylval->bytes) {
+    yylval->bytes->len = yyleng;
+    yylval->bytes->bytes = malloc(yyleng);
+    if (yylval->bytes->bytes) {
+      memcpy(yylval->bytes->bytes, yytext, yyleng);
+    } else {
+      warcyyerror("flex: Unable to allocate memory\n");
+    }
+    return TEXT;
+  } else {
+    warcyyerror("flex: Unable to allocate memory\n");
+  }
 }
 
 <BODY>.*{CRLF}{CRLF} {
-  BEGIN(INITIAL);
-  return BLOCK;
+
+  yylval->bytes = malloc(sizeof(struct bytes_field));
+  if (yylval->bytes) {
+    yylval->bytes->len = yyleng;
+    yylval->bytes->bytes = malloc(yyleng);
+    if (yylval->bytes->bytes) {
+      memcpy(yylval->bytes->bytes, yytext, yyleng);
+    } else {
+      warcyyerror("flex: Unable to allocate memory\n");
+    }
+    BEGIN(INITIAL);
+    return BLOCK;
+  } else {
+    warcyyerror("flex: Unable to allocate memory\n");
+  }
 }
 
-<BODY>. {
+<BODY>.|\n {
   warcyyerror("flex: Unknown token: %s\n", yytext);
 }
 
-<HEADER_VALUE>. {
+<HEADER>.|\n {
+  warcyyerror("flex: Unknown token: %s\n", yytext);
+}
+
+<HEADER_VALUE>.|\n {
   warcyyerror("flex: Unknown token: %s\n", yytext);
 }
 
