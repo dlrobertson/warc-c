@@ -24,8 +24,8 @@
 #include <warc-c/bytes_field.h>
 #include <warc-c/warc_headers.h>
 
-struct warc_header* warc_header_create(const char* name, struct bytes_field* value) {
-  struct warc_header* header = malloc(sizeof(struct warc_header));
+struct warc_header *warc_header_create(const char *name, struct bytes_field *value) {
+  struct warc_header *header = (struct warc_header *)malloc(sizeof(struct warc_header));
   if (header && name) {
     header->name = strdup(name);
     if (header->name) {
@@ -57,20 +57,18 @@ void warc_header_free(struct warc_header *header) {
   }
 }
 
-static int warc_header_compar_sort(const void* hdr0, const void* hdr1) {
+static int warc_header_compar_sort(const void *hdr0, const void *hdr1) {
   return strcmp((*(const struct warc_header **)hdr0)->name,
                 (*(const struct warc_header **)hdr1)->name);
 }
 
-static int warc_header_compar_find(const void* key, const void* hdr1) {
-  return strcmp((const char*)key,
-                (*(const struct warc_header **)hdr1)->name);
+static int warc_header_compar_find(const void *key, const void *hdr1) {
+  return strcmp((const char *)key, (*(const struct warc_header **)hdr1)->name);
 }
 
-static int warc_headers_inner_add_header(struct warc_headers *headers,
-                                         struct warc_header* header) {
+static int warc_headers_inner_add_header(struct warc_headers *headers, struct warc_header *header) {
   size_t new_len = headers->len + 1;
-  struct warc_header** tmp;
+  struct warc_header **tmp;
   if (new_len >= headers->cap) {
     tmp = realloc(headers->headers, headers->cap + WARC_HEADERS_INC);
     if (tmp) {
@@ -86,9 +84,9 @@ static int warc_headers_inner_add_header(struct warc_headers *headers,
   return 0;
 }
 
-struct warc_header* warc_headers_add(struct warc_headers *headers, const char *name,
-                                     struct bytes_field* value) {
-  struct warc_header* header = NULL;
+struct warc_header *warc_headers_add(struct warc_headers *headers, const char *name,
+                                     struct bytes_field *value) {
+  struct warc_header *header = NULL;
   if (headers) {
     header = warc_header_create(name, value);
     if (header) {
@@ -104,13 +102,12 @@ struct warc_header* warc_headers_add(struct warc_headers *headers, const char *n
   return NULL;
 }
 
-struct warc_header* warc_headers_find(struct warc_headers *headers, const char *name) {
-    struct warc_header** elem = bsearch(name, headers->headers, headers->len,
-                                        sizeof(struct warc_header *),
-                                        &warc_header_compar_find);
-    if (elem) {
-        return *elem;
-    } else {
-        return NULL;
-    }
+struct warc_header *warc_headers_find(struct warc_headers *headers, const char *name) {
+  struct warc_header **elem = bsearch(name, headers->headers, headers->len,
+                                      sizeof(struct warc_header *), &warc_header_compar_find);
+  if (elem) {
+    return *elem;
+  } else {
+    return NULL;
+  }
 }

@@ -29,7 +29,7 @@ extern "C" {
 
 TEST(SimpleWarcFile, first) {
   struct warc_entry *entry = NULL;
-  struct warc_header* header = NULL;
+  struct warc_header *header = NULL;
   FILE *f = fopen(TEST_FILES_EXAMPLES "/test.warc", "r");
   if (f) {
     entry = warc_parse_file(f);
@@ -40,9 +40,7 @@ TEST(SimpleWarcFile, first) {
     // First Header
     header = warc_headers_find(&entry->headers, "Something");
     ASSERT_EQ(strcmp(header->name, "Something"), 0);
-    ASSERT_EQ(strncmp((const char*)header->value->bytes,
-                      "Else", header->value->len),
-              0);
+    ASSERT_EQ(strncmp((const char *)header->value->bytes, "Else", header->value->len), 0);
 
     // Second Header
     header = warc_headers_find(&entry->headers, "And0");
@@ -52,9 +50,7 @@ TEST(SimpleWarcFile, first) {
     // Third Header
     header = warc_headers_find(&entry->headers, "And1");
     ASSERT_EQ(strcmp(header->name, "And1"), 0);
-    ASSERT_EQ(strncmp((const char*)header->value->bytes,
-                      "Another", header->value->len),
-              0);
+    ASSERT_EQ(strncmp((const char *)header->value->bytes, "Another", header->value->len), 0);
 
     // Not a header
     header = warc_headers_find(&entry->headers, "Not Found");
@@ -62,10 +58,8 @@ TEST(SimpleWarcFile, first) {
 
     // Check the block
     ASSERT_TRUE(entry->block);
-    ASSERT_EQ(strncmp((const char*)entry->block->bytes,
-                      "Hello, World!\r\n\r\n",
-                      entry->block->len),
-              0);
+    ASSERT_EQ(
+        strncmp((const char *)entry->block->bytes, "Hello, World!\r\n\r\n", entry->block->len), 0);
     warc_entry_free(entry);
   }
 }

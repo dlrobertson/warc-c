@@ -24,27 +24,27 @@
 #define WARC_HEADERS_INC 10
 
 struct warc_headers {
-  struct warc_header** headers;
+  struct warc_header **headers;
   size_t len;
   size_t cap;
 };
 
-struct bytes_field* warc_headers_get(struct warc_headers *headers, const char *name);
+struct bytes_field *warc_headers_get(struct warc_headers *headers, const char *name);
 
-struct warc_header* warc_headers_find(struct warc_headers *headers, const char *name);
+struct warc_header *warc_headers_find(struct warc_headers *headers, const char *name);
 
-struct warc_header* warc_headers_add(struct warc_headers *headers, const char *name,
-                                     struct bytes_field* value);
+struct warc_header *warc_headers_add(struct warc_headers *headers, const char *name,
+                                     struct bytes_field *value);
 
-#define FOREACH_HEADER(headers, tmp) \
-    for(tmp = (headers).headers; tmp < (headers).headers + (headers).len; ++tmp)
+#define FOREACH_HEADER(hdrs, tmp)                                                                  \
+  for (tmp = (hdrs).headers; tmp < (hdrs).headers + (hdrs).len; ++tmp)
 
 struct warc_header {
-  char* name;
-  struct bytes_field* value;
+  char *name;
+  struct bytes_field *value;
 };
 
-struct warc_header* warc_header_create(const char* name, struct bytes_field* value);
+struct warc_header *warc_header_create(const char *name, struct bytes_field *value);
 
 void warc_header_free(struct warc_header *);
 

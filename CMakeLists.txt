@@ -111,11 +111,19 @@ set_property(TARGET ${PROJECT_NAME}-static PROPERTY CXX_STANDARD 14)
 
 # Lints
 
-add_custom_target(clang-tidy COMMAND clang-tidy ${SRC_DIR}/*.c
+if (CLANG_TOOLS_PATH)
+    set(CLANG_TIDY ${CLANG_TOOLS_PATH}/clang-tidy)
+    set(CLANG_FORMAT ${CLANG_TOOLS_PATH}/clang-format)
+else(CLANG_TOOLS_PATH)
+    set(CLANG_TIDY clang-tidy)
+    set(CLANG_FORMAT clang-format)
+endif(CLANG_TOOLS_PATH)
+
+add_custom_target(clang-tidy COMMAND ${CLANG_TIDY} ${SRC_DIR}/*.c
     -- -std=c++14 -I${INCLUDE_DIR})
 
-add_custom_target(clang-format COMMAND clang-format -i -style=file
-    ${SRC_DIR}/*.c ${TEST_DIR}/*.cpp ${INCLUDE_DIR}/*.h)
+add_custom_target(clang-format COMMAND ${CLANG_FORMAT} -i -style=file
+    ${SRC_DIR}/*.c ${TEST_DIR}/*.cpp ${INCLUDE_DIR}/${PROJECT_NAME}/*.h)
 
 # Docs
 

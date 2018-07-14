@@ -44,11 +44,12 @@ struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len) {
 
 struct warc_entry *warc_parse_file(FILE *f) {
   yyscan_t scanner;
-  struct warc_entry* entry = malloc(sizeof(struct warc_entry));
+  struct warc_entry *entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
 
-  if (!entry || warcyylex_init(&scanner)) {
+  if (!entry) {
     return NULL;
-  } else if (warc_entry_init(entry)) {
+  } else if (warc_entry_init(entry) || warcyylex_init(&scanner)) {
+    warc_entry_free(entry);
     return NULL;
   }
 

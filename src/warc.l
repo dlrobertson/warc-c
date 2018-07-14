@@ -82,15 +82,9 @@ WS [\t ]*
 }
 
 <HEADER_VALUE>{TEXT}+ {
-  yylval->bytes = malloc(sizeof(struct bytes_field));
-  if (yylval->bytes) {
-    yylval->bytes->len = yyleng;
-    yylval->bytes->bytes = malloc(yyleng);
-    if (yylval->bytes->bytes) {
-      memcpy(yylval->bytes->bytes, yytext, yyleng);
-    } else {
-      warcyyerror("flex: Unable to allocate memory\n");
-    }
+  yylval->bytes = (struct bytes_field *)malloc(sizeof(struct bytes_field));
+  yylval->bytes = bytes_field_from_bytes((const u_int8_t *)yytext, yyleng);
+  if(yylval->bytes) {
     return TEXT;
   } else {
     warcyyerror("flex: Unable to allocate memory\n");
@@ -98,16 +92,9 @@ WS [\t ]*
 }
 
 <BODY>.*{CRLF}{CRLF} {
-
-  yylval->bytes = malloc(sizeof(struct bytes_field));
-  if (yylval->bytes) {
-    yylval->bytes->len = yyleng;
-    yylval->bytes->bytes = malloc(yyleng);
-    if (yylval->bytes->bytes) {
-      memcpy(yylval->bytes->bytes, yytext, yyleng);
-    } else {
-      warcyyerror("flex: Unable to allocate memory\n");
-    }
+  yylval->bytes = (struct bytes_field *)malloc(sizeof(struct bytes_field));
+  yylval->bytes = bytes_field_from_bytes((const u_int8_t *)yytext, yyleng);
+  if(yylval->bytes) {
     BEGIN(INITIAL);
     return BLOCK;
   } else {

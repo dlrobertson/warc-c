@@ -23,7 +23,7 @@
 #include <warc-c/warc_entry.h>
 
 int warc_entry_init(struct warc_entry *entry) {
-  struct warc_header** headers = malloc(sizeof(struct warc_header*) * WARC_HEADERS_INC);
+  struct warc_header **headers = malloc(sizeof(struct warc_header *) * WARC_HEADERS_INC);
   if (headers) {
     entry->version = NULL;
     entry->headers.len = 0;
@@ -37,17 +37,12 @@ int warc_entry_init(struct warc_entry *entry) {
 }
 
 void warc_entry_free(struct warc_entry *entry) {
-  struct warc_header** tmp;
+  struct warc_header **tmp;
   if (entry) {
     if (entry->version) {
       free(entry->version);
     }
-    //FOREACH_HEADER(mod->headers, header) {
-    for(tmp = (entry->headers).headers;
-        tmp < (entry->headers).headers + (entry->headers).len;
-        ++tmp) {
-      warc_header_free(*tmp);
-    }
+    FOREACH_HEADER(entry->headers, tmp) { warc_header_free(*tmp); }
     free(entry);
   }
 }
