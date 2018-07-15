@@ -30,7 +30,6 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include <warc-c/warc-c.h>
 #include <warc-c/warc_parser.h>
 #include "warc.tab.h"
 #define YYSTYPE WARCYYSTYPE
@@ -103,19 +102,19 @@ WS [\t ]*
 }
 
 <BODY>.|\n {
-  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex(BODY): Unknown token %s\n", yytext);
 }
 
 <HEADER>.|\n {
-  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex(HEADER): Unknown token %s\n", yytext);
 }
 
 <HEADER_VALUE>.|\n {
-  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex(HEADER_VALUE): Unknown token %s\n", yytext);
 }
 
 .|\n {
-  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex(INITIAL): Unknown token %s\n", yytext);
 }
 
 %%

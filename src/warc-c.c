@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <stdarg.h>
 #include <stdlib.h>
 
 #include <warc-c/warc-c.h>
@@ -29,11 +28,16 @@
 #include "warc.lex.h"
 
 // FIXME(dlrobertson): This does not work at all.
-struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len) {
+struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len, int debug) {
   yyscan_t scanner;
   YY_BUFFER_STATE buf;
 
   warcyylex_init(&scanner);
+
+  if (debug) {
+    warcyydebug = 1;
+    warcyyset_debug(1, scanner);
+  }
 
   buf = warcyy_scan_bytes(bytes, len, scanner);
 
@@ -43,43 +47,16 @@ struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len) {
   return NULL;
 }
 
-struct warc_entry *warc_parse_file(FILE *f) {
-  yyscan_t scanner;
-  struct warc_parser *parser = warc_parser_create(&scanner);
+struct warc_entry *warc_parse_file(FILE *f, int debug) {
+  struct warc_parser *parser = warc_parser_create(debug);
 
   if (!parser) {
     return NULL;
-  } else if (warcyylex_init_extra(parser, &scanner)) {
-    warc_parser_free(parser);
-    return NULL;
   }
 
-  // FIXME(dlroberton): remove this and add a parameter
-  // to enable the equivalent of the following.
-  //
-  // warcyydebug = 1;
-  // warcyyset_debug(1, scanner);
-  warcyyrestart(f, scanner);
-  if (!warcyyparse(scanner, parser) && !warc_parser_state(parser)) {
-    warcyylex_destroy(scanner);
-    return warc_parser_consume(parser);
+  if (warc_parser_parse_file(parser, f)) {
+    return NULL;
   } else {
-    warc_parser_free(parser);
-    warcyylex_destroy(scanner);
-    return NULL;
+    return warc_parser_consume(parser);
   }
-}
-
-int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...) {
-  va_list ap;
-  va_start(ap, fmt);
-  vfprintf(stderr, fmt, ap);
-  va_end(ap);
-
-  // If an error has already occurred don't overwrite it.
-  if (!warc_parser_state(parser)) {
-    fprintf(stderr, "%s\n", "Setting the parser state to an error!");
-    warc_parser_set_state(parser, PARSER_STATE_MALFORMED);
-  }
-  return warc_parser_state(parser);
 }

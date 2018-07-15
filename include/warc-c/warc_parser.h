@@ -26,8 +26,6 @@
 #include <warc-c/bytes_field.h>
 #include <warc-c/warc_entry.h>
 
-struct warc_parser;
-
 enum warc_parser_state {
   PARSER_STATE_SUCCESS = 0,
   PARSER_STATE_NO_MEM,
@@ -35,7 +33,9 @@ enum warc_parser_state {
   PARSER_STATE_MAX
 };
 
-struct warc_parser *warc_parser_create(void *scanner);
+struct warc_parser;
+
+struct warc_parser *warc_parser_create(int debug);
 
 void warc_parser_free(struct warc_parser *prsr);
 
@@ -52,5 +52,9 @@ enum warc_parser_state warc_parser_state(struct warc_parser *prsr);
 void warc_parser_set_state(struct warc_parser *prsr, enum warc_parser_state state);
 
 void *warc_parser_scanner(struct warc_parser *prsr);
+
+enum warc_parser_state warc_parser_parse_file(struct warc_parser* prsr, FILE* f);
+
+int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...);
 
 #endif

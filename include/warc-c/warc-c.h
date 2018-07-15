@@ -30,8 +30,8 @@
 
 int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...);
 
-struct warc_entry *warc_parse_file(FILE *f);
+struct warc_entry *warc_parse_file(FILE *f, int debug);
 
-struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len);
+struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len, int debug);
 
 #endif

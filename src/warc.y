@@ -23,7 +23,6 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <warc-c/warc-c.h>
 #include <warc-c/warc_parser.h>
 #include "warc.tab.h"
 #include "warc.lex.h"
@@ -43,7 +42,7 @@
 }
 
 /* Well known token strings */
-%token CRLF COLON
+%token CRLF TWOCRLF COLON
 
 %token VERSION
 %token BLOCK
@@ -65,11 +64,13 @@ warc_file:
   warc_record { printf("bison: warc_record\n"); } END_OF_FILE |
   warc_record warc_record END_OF_FILE
   ;
+
 */
 
 %%
 
 warc_file:
+  /* empty */ |
   warc_record |
   warc_record warc_record
   ;

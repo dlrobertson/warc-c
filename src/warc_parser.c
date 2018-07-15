@@ -18,27 +18,42 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <stdarg.h>
 #include <stdlib.h>
 
-#include <warc-c/warc-c.h>
 #include <warc-c/warc_entry.h>
 #include <warc-c/warc_headers.h>
+#include <warc-c/warc_parser.h>
+
+#include "warc.tab.h"
+#define YYSTYPE WARCYYSTYPE
+#include "warc.lex.h"
 
 struct warc_parser {
   enum warc_parser_state state;
   struct warc_entry *entry;
-  void *scanner;
+  yyscan_t scanner;
 };
 
-struct warc_parser *warc_parser_create(void *scanner) {
+struct warc_parser *warc_parser_create(int debug) {
   struct warc_parser *prsr = (struct warc_parser *)malloc(sizeof(struct warc_parser));
-  prsr->scanner = scanner;
   if (prsr) {
     prsr->entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
     if (prsr->entry) {
       if (!warc_entry_init(prsr->entry)) {
         prsr->state = PARSER_STATE_SUCCESS;
-        return prsr;
+        if (warcyylex_init_extra(prsr, &prsr->scanner)) {
+          warc_parser_free(prsr);
+        } else {
+          if (debug) {
+            warcyydebug = 1;
+            warcyyset_debug(1, prsr->scanner);
+          } else {
+            warcyydebug = 0;
+            warcyyset_debug(0, prsr->scanner);
+          }
+          return prsr;
+        }
       } else {
         free(prsr->entry);
         free(prsr);
@@ -54,6 +69,9 @@ void warc_parser_free(struct warc_parser *prsr) {
   if (prsr) {
     if (prsr->entry) {
       free(prsr->entry);
+    }
+    if (prsr->scanner) {
+      warcyylex_destroy(prsr->scanner);
     }
     free(prsr);
   }
@@ -90,4 +108,28 @@ void warc_parser_set_state(struct warc_parser *prsr, enum warc_parser_state stat
   prsr->state = state;
 }
 
-void *warc_parser_scanner(struct warc_parser *prsr) { return prsr->scanner; }
+void *warc_parser_scanner(struct warc_parser *prsr) { return &prsr->scanner; }
+
+enum warc_parser_state warc_parser_parse_file(struct warc_parser* prsr, FILE* f) {
+  int err;
+
+  warcyyrestart(f, prsr->scanner);
+
+  err = warcyyparse(prsr->scanner, prsr);
+
+  return (err && !prsr->state) ? PARSER_STATE_MALFORMED : prsr->state;
+}
+
+int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+
+  // If an error has already occurred don't overwrite it.
+  if (!warc_parser_state(parser)) {
+    fprintf(stderr, "%s\n", "Setting the parser state to an error!");
+    warc_parser_set_state(parser, PARSER_STATE_MALFORMED);
+  }
+  return warc_parser_state(parser);
+}
