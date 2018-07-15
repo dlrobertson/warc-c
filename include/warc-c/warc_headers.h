@@ -21,31 +21,37 @@
 #ifndef WARC_C_WARC_HEADERS
 #define WARC_C_WARC_HEADERS
 
+#include <warc-c/bytes_field.h>
+
 #define WARC_HEADERS_INC 10
-
-struct warc_headers {
-  struct warc_header **headers;
-  size_t len;
-  size_t cap;
-};
-
-struct bytes_field *warc_headers_get(struct warc_headers *headers, const char *name);
-
-struct warc_header *warc_headers_find(struct warc_headers *headers, const char *name);
-
-struct warc_header *warc_headers_add(struct warc_headers *headers, const char *name,
-                                     struct bytes_field *value);
-
-#define FOREACH_HEADER(hdrs, tmp)                                                                  \
-  for (tmp = (hdrs).headers; tmp < (hdrs).headers + (hdrs).len; ++tmp)
 
 struct warc_header {
   char *name;
   struct bytes_field *value;
 };
 
-struct warc_header *warc_header_create(const char *name, struct bytes_field *value);
+struct warc_header *warc_header_create(char *name, struct bytes_field *value);
 
 void warc_header_free(struct warc_header *);
+
+struct warc_headers {
+  struct warc_header **store;
+  size_t len;
+  size_t cap;
+};
+
+int warc_headers_init(struct warc_headers *headers);
+
+struct warc_header *warc_headers_add(struct warc_headers *headers, char *name,
+                                     struct bytes_field *value);
+
+struct warc_header *warc_headers_find(struct warc_headers *headers, const char *name);
+
+struct bytes_field *warc_headers_get(struct warc_headers *headers, const char *name);
+
+void warc_headers_free(struct warc_headers *headers);
+
+#define FOREACH_HEADER(hdrs, tmp)                                                                  \
+  for (tmp = (hdrs)->store; tmp < (hdrs)->store + (hdrs)->len; ++tmp)
 
 #endif

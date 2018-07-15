@@ -43,7 +43,7 @@
 }
 
 /* Well known token strings */
-%token CRLF COLON END_OF_FILE
+%token CRLF COLON
 
 %token VERSION
 %token BLOCK
@@ -70,7 +70,8 @@ warc_file:
 %%
 
 warc_file:
-  warc_record {}
+  warc_record |
+  warc_record warc_record
   ;
 
 warc_record:
@@ -80,7 +81,7 @@ warc_record:
   ;
 
 header:
-  version warc_fields CRLF { }
+  version warc_fields CRLF
   ;
 
 version:
@@ -90,8 +91,8 @@ version:
   ;
 
 warc_fields:
-  warc_fields CRLF named_field { } |
-  named_field { }
+  warc_fields CRLF named_field |
+  named_field
   ;
 
 named_field:

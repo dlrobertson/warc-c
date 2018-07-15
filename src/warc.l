@@ -27,8 +27,8 @@
 %option prefix="warcyy"
 
 %{
-#include <stdio.h>
 #include <stdarg.h>
+#include <string.h>
 
 #include <warc-c/warc-c.h>
 #include <warc-c/warc_parser.h>
@@ -55,7 +55,7 @@ WS [\t ]*
 }
 
 ^WARC"/"1.0 {
-  yylval->str = strdup(yytext);
+  yylval->str = strndup(yytext, yyleng);
   return VERSION;
 }
 
@@ -69,7 +69,7 @@ WS [\t ]*
 }
 
 <HEADER>{TOKEN}+ {
-  yylval->str = strdup(yytext);
+  yylval->str = strndup(yytext, yyleng);
   return TOKEN;
 }
 
@@ -84,8 +84,7 @@ WS [\t ]*
 }
 
 <HEADER_VALUE>({TEXT}+|{LWS})+ {
-  yylval->bytes = (struct bytes_field *)malloc(sizeof(struct bytes_field));
-  yylval->bytes = bytes_field_from_bytes((const u_int8_t *)yytext, yyleng);
+  yylval->bytes = bytes_field_from_bytes((const uint8_t *)yytext, yyleng);
   if(yylval->bytes) {
     return TEXT;
   } else {
@@ -94,8 +93,7 @@ WS [\t ]*
 }
 
 <BODY>{OCTET}*{CRLF}{CRLF} {
-  yylval->bytes = (struct bytes_field *)malloc(sizeof(struct bytes_field));
-  yylval->bytes = bytes_field_from_bytes((const u_int8_t *)yytext, yyleng);
+  yylval->bytes = bytes_field_from_bytes((const uint8_t *)yytext, yyleng);
   if(yylval->bytes) {
     BEGIN(INITIAL);
     return BLOCK;

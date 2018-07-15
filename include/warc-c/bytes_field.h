@@ -25,10 +25,13 @@
 
 struct bytes_field {
   size_t len;
-  u_int8_t *bytes;
+  uint8_t *bytes;
 };
 
 struct bytes_field *bytes_field_copy(const struct bytes_field *value);
 
-struct bytes_field *bytes_field_from_bytes(const u_int8_t *bytes, size_t len);
+struct bytes_field *bytes_field_from_bytes(const uint8_t *bytes, size_t len);
+
+void bytes_field_free(struct bytes_field *field);
+
 #endif

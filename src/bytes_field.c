@@ -23,24 +23,33 @@
 
 #include <warc-c/bytes_field.h>
 
-struct bytes_field *bytes_field_from_bytes(const u_int8_t *bytes, size_t len) {
+struct bytes_field *bytes_field_from_bytes(const uint8_t *bytes, size_t len) {
   struct bytes_field *field = NULL;
   if (len > 0) {
     field = (struct bytes_field *)malloc(sizeof(struct bytes_field));
-    if (field && len > 0) {
+    if (field) {
       field->len = len;
-      field->bytes = (u_int8_t *)malloc(field->len);
+      field->bytes = (uint8_t *)malloc(field->len);
       if (field->bytes) {
         memcpy(field->bytes, bytes, field->len);
-        return field;
       } else {
         free(field);
+        field = NULL;
       }
     }
   }
-  return NULL;
+  return field;
 }
 
 struct bytes_field *bytes_field_copy(const struct bytes_field *value) {
   return bytes_field_from_bytes(value->bytes, value->len);
+}
+
+void bytes_field_free(struct bytes_field *field) {
+  if (field) {
+    if (field->bytes) {
+      free(field->bytes);
+    }
+    free(field);
+  }
 }

@@ -59,10 +59,12 @@ void warc_parser_free(struct warc_parser *prsr) {
   }
 }
 
-void parser_add_header(struct warc_parser *prsr, const char *name, struct bytes_field *value) {
+void parser_add_header(struct warc_parser *prsr, char *name, struct bytes_field *value) {
   if (!warc_headers_add(&prsr->entry->headers, name, value)) {
     prsr->state = PARSER_STATE_NO_MEM;
     warcyyerror(prsr->scanner, prsr, "%s\n", "Error: No Memory!");
+    bytes_field_free(value);
+    free(name);
   }
 }
 

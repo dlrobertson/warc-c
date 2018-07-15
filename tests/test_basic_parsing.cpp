@@ -83,5 +83,7 @@ TEST(SimpleWarcFile, bbc) {
     ASSERT_TRUE(header);
     ASSERT_EQ(strcmp(header->name, "WARC-Type"), 0);
     ASSERT_EQ(strncmp((const char *)header->value->bytes, "response", header->value->len), 0);
+
+    warc_entry_free(entry);
   }
 }

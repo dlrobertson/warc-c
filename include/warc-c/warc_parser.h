@@ -39,7 +39,7 @@ struct warc_parser *warc_parser_create(void *scanner);
 
 void warc_parser_free(struct warc_parser *prsr);
 
-void parser_add_header(struct warc_parser *prsr, const char *name, struct bytes_field *value);
+void parser_add_header(struct warc_parser *prsr, char *name, struct bytes_field *value);
 
 void parser_set_block(struct warc_parser *prsr, struct bytes_field *value);
 
