@@ -25,19 +25,22 @@
 #include <warc-c/warc_headers.h>
 
 struct warc_header *warc_header_create(const char *name, struct bytes_field *value) {
-  struct warc_header *header = (struct warc_header *)malloc(sizeof(struct warc_header));
-  if (header && name) {
-    header->name = strdup(name);
-    if (header->name) {
-      if (value) {
-        header->value = value;
+  struct warc_header *header;
+  if (name) {
+    header = (struct warc_header *)malloc(sizeof(struct warc_header));
+    if (header) {
+      header->name = strdup(name);
+      if (header->name) {
+        if (value) {
+          header->value = value;
+        } else {
+          // Header has no value.
+          header->value = NULL;
+        }
+        return header;
       } else {
-        // Header has no value.
-        header->value = NULL;
+        free(header);
       }
-      return header;
-    } else {
-      free(header);
     }
   }
   return NULL;
@@ -54,6 +57,7 @@ void warc_header_free(struct warc_header *header) {
       }
       free(header->value);
     }
+    free(header);
   }
 }
 
@@ -69,8 +73,9 @@ static int warc_header_compar_find(const void *key, const void *hdr1) {
 static int warc_headers_inner_add_header(struct warc_headers *headers, struct warc_header *header) {
   size_t new_len = headers->len + 1;
   struct warc_header **tmp;
-  if (new_len >= headers->cap) {
-    tmp = realloc(headers->headers, headers->cap + WARC_HEADERS_INC);
+  if (new_len <= headers->cap) {
+    tmp = (struct warc_header **)realloc(headers->headers,
+                                         (headers->cap + WARC_HEADERS_INC) * sizeof(struct warc_header *));
     if (tmp) {
       headers->cap += WARC_HEADERS_INC;
       headers->headers = tmp;
@@ -103,8 +108,8 @@ struct warc_header *warc_headers_add(struct warc_headers *headers, const char *n
 }
 
 struct warc_header *warc_headers_find(struct warc_headers *headers, const char *name) {
-  struct warc_header **elem = bsearch(name, headers->headers, headers->len,
-                                      sizeof(struct warc_header *), &warc_header_compar_find);
+  struct warc_header **elem = (struct warc_header **)bsearch(
+      name, headers->headers, headers->len, sizeof(struct warc_header *), &warc_header_compar_find);
   if (elem) {
     return *elem;
   } else {

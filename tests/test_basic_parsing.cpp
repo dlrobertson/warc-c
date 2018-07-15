@@ -39,18 +39,22 @@ TEST(SimpleWarcFile, first) {
 
     // First Header
     header = warc_headers_find(&entry->headers, "Something");
+    ASSERT_TRUE(header);
     ASSERT_EQ(strcmp(header->name, "Something"), 0);
     ASSERT_EQ(strncmp((const char *)header->value->bytes, "Else", header->value->len), 0);
 
     // Second Header
     header = warc_headers_find(&entry->headers, "And0");
+    ASSERT_TRUE(header);
     ASSERT_EQ(strcmp(header->name, "And0"), 0);
     ASSERT_FALSE(header->value);
 
     // Third Header
     header = warc_headers_find(&entry->headers, "And1");
+    ASSERT_TRUE(header);
     ASSERT_EQ(strcmp(header->name, "And1"), 0);
-    ASSERT_EQ(strncmp((const char *)header->value->bytes, "Another", header->value->len), 0);
+    ASSERT_EQ(strncmp((const char *)header->value->bytes, "Multiple\r\n Lines", header->value->len),
+              0);
 
     // Not a header
     header = warc_headers_find(&entry->headers, "Not Found");
@@ -61,5 +65,23 @@ TEST(SimpleWarcFile, first) {
     ASSERT_EQ(
         strncmp((const char *)entry->block->bytes, "Hello, World!\r\n\r\n", entry->block->len), 0);
     warc_entry_free(entry);
+  }
+}
+
+TEST(SimpleWarcFile, bbc) {
+  struct warc_entry *entry = NULL;
+  struct warc_header *header = NULL;
+  FILE *f = fopen(TEST_FILES_EXAMPLES "/bbc.warc", "r");
+  if (f) {
+    entry = warc_parse_file(f);
+    ASSERT_TRUE(entry != NULL);
+    ASSERT_TRUE(entry->version != NULL);
+    ASSERT_EQ(strcmp(entry->version, "WARC/1.0"), 0);
+
+    // First Header
+    header = warc_headers_find(&entry->headers, "WARC-Type");
+    ASSERT_TRUE(header);
+    ASSERT_EQ(strcmp(header->name, "WARC-Type"), 0);
+    ASSERT_EQ(strncmp((const char *)header->value->bytes, "response", header->value->len), 0);
   }
 }

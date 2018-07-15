@@ -18,29 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <stdlib.h>
-#include <string.h>
+#ifndef WARC_C_WARC_PARSER
+#define WARC_C_WARC_PARSER
+
+#include <stdio.h>
 
 #include <warc-c/bytes_field.h>
+#include <warc-c/warc_entry.h>
 
-struct bytes_field *bytes_field_from_bytes(const u_int8_t *bytes, size_t len) {
-  struct bytes_field *field = NULL;
-  if (len > 0) {
-    field = (struct bytes_field *)malloc(sizeof(struct bytes_field));
-    if (field && len > 0) {
-      field->len = len;
-      field->bytes = (u_int8_t *)malloc(field->len);
-      if (field->bytes) {
-        memcpy(field->bytes, bytes, field->len);
-        return field;
-      } else {
-        free(field);
-      }
-    }
-  }
-  return NULL;
-}
+struct warc_parser;
 
-struct bytes_field *bytes_field_copy(const struct bytes_field *value) {
-  return bytes_field_from_bytes(value->bytes, value->len);
-}
+enum warc_parser_state {
+  PARSER_STATE_SUCCESS = 0,
+  PARSER_STATE_NO_MEM,
+  PARSER_STATE_MALFORMED,
+  PARSER_STATE_MAX
+};
+
+struct warc_parser *warc_parser_create(void *scanner);
+
+void warc_parser_free(struct warc_parser *prsr);
+
+void parser_add_header(struct warc_parser *prsr, const char *name, struct bytes_field *value);
+
+void parser_set_block(struct warc_parser *prsr, struct bytes_field *value);
+
+void parser_set_version(struct warc_parser *prsr, char *version);
+
+struct warc_entry *warc_parser_consume(struct warc_parser *prsr);
+
+enum warc_parser_state warc_parser_state(struct warc_parser *prsr);
+
+void warc_parser_set_state(struct warc_parser *prsr, enum warc_parser_state state);
+
+void *warc_parser_scanner(struct warc_parser *prsr);
+
+#endif

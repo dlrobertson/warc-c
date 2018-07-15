@@ -26,8 +26,9 @@
 #include <warc-c/bytes_field.h>
 #include <warc-c/warc_entry.h>
 #include <warc-c/warc_headers.h>
+#include <warc-c/warc_parser.h>
 
-void warcyyerror(const char *s, ...);
+int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...);
 
 struct warc_entry *warc_parse_file(FILE *f);
 

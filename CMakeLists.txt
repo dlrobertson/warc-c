@@ -120,7 +120,7 @@ else(CLANG_TOOLS_PATH)
 endif(CLANG_TOOLS_PATH)
 
 add_custom_target(clang-tidy COMMAND ${CLANG_TIDY} ${SRC_DIR}/*.c
-    -- -std=c++14 -I${INCLUDE_DIR})
+    -- -std=c11 -I${INCLUDE_DIR})
 
 add_custom_target(clang-format COMMAND ${CLANG_FORMAT} -i -style=file
     ${SRC_DIR}/*.c ${TEST_DIR}/*.cpp ${INCLUDE_DIR}/${PROJECT_NAME}/*.h)

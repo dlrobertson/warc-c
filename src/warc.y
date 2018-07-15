@@ -24,18 +24,18 @@
 #include <string.h>
 
 #include <warc-c/warc-c.h>
+#include <warc-c/warc_parser.h>
 #include "warc.tab.h"
-#define YYSTYPE WARCYYSTYPE
 #include "warc.lex.h"
 
 %}
 
 %define api.pure full
+%define api.prefix {warcyy}
 %define parse.trace
 %define parse.error verbose
-%define api.prefix {warcyy}
 %lex-param {void* scanner}
-%parse-param {void* scanner}{struct warc_entry* mod}
+%parse-param {void* scanner}{struct warc_parser* parser}
 
 %union {
   char* str;
@@ -69,8 +69,14 @@ warc_file:
 
 %%
 
+warc_file:
+  warc_record {}
+  ;
+
 warc_record:
-  header CRLF BLOCK { mod->block = $3; }
+  header CRLF BLOCK {
+    parser_set_block(parser, $3);
+  }
   ;
 
 header:
@@ -79,7 +85,7 @@ header:
 
 version:
   VERSION CRLF {
-    mod->version = $1;
+    parser_set_version(parser, $1);
   }
   ;
 
@@ -90,10 +96,10 @@ warc_fields:
 
 named_field:
   field_name COLON {
-    warc_headers_add(&mod->headers, $1, NULL);
+    parser_add_header(parser, $1, NULL);
   } |
   field_name COLON TEXT {
-    warc_headers_add(&mod->headers, $1, $3);
+    parser_add_header(parser, $1, $3);
   }
   ;
 

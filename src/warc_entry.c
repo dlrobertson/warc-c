@@ -23,7 +23,8 @@
 #include <warc-c/warc_entry.h>
 
 int warc_entry_init(struct warc_entry *entry) {
-  struct warc_header **headers = malloc(sizeof(struct warc_header *) * WARC_HEADERS_INC);
+  struct warc_header **headers =
+      (struct warc_header **)malloc(sizeof(struct warc_header *) * WARC_HEADERS_INC);
   if (headers) {
     entry->version = NULL;
     entry->headers.len = 0;

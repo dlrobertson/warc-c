@@ -19,25 +19,27 @@
  * SOFTWARE.
  */
 
-%option prefix="warcyy"
 %option noinput nounput noyywrap nodefault
 %option bison-bridge reentrant
 %option header-file="src/warc.lex.h"
+%option extra-type="struct warc_parser *"
+%option debug
+%option prefix="warcyy"
 
 %{
 #include <stdio.h>
-#include <string.h>
+#include <stdarg.h>
 
 #include <warc-c/warc-c.h>
+#include <warc-c/warc_parser.h>
 #include "warc.tab.h"
-
 #define YYSTYPE WARCYYSTYPE
 %}
 
 TOKEN [\x21-\x39\x3b-\x7e]
 TEXT [\x20-\x7e]
-TEXTLWS [\x20-\x7e]
-LWS \r\n*[\t ]*
+OCTET [\x00-\xff]
+LWS \r\n*[\t ]+
 CRLF \r\n
 WS [\t ]*
 
@@ -58,7 +60,7 @@ WS [\t ]*
 }
 
 <<EOF>> {
-  return END_OF_FILE;
+  yyterminate();
 }
 
 <HEADER>{CRLF} {
@@ -81,41 +83,42 @@ WS [\t ]*
   return CRLF;
 }
 
-<HEADER_VALUE>{TEXT}+ {
+<HEADER_VALUE>({TEXT}+|{LWS})+ {
   yylval->bytes = (struct bytes_field *)malloc(sizeof(struct bytes_field));
   yylval->bytes = bytes_field_from_bytes((const u_int8_t *)yytext, yyleng);
   if(yylval->bytes) {
     return TEXT;
   } else {
-    warcyyerror("flex: Unable to allocate memory\n");
+    warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unable to allocate memory\n");
   }
 }
 
-<BODY>.*{CRLF}{CRLF} {
+<BODY>{OCTET}*{CRLF}{CRLF} {
   yylval->bytes = (struct bytes_field *)malloc(sizeof(struct bytes_field));
   yylval->bytes = bytes_field_from_bytes((const u_int8_t *)yytext, yyleng);
   if(yylval->bytes) {
     BEGIN(INITIAL);
     return BLOCK;
   } else {
-    warcyyerror("flex: Unable to allocate memory\n");
+    warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unable to allocate memory\n");
   }
 }
 
 <BODY>.|\n {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
 }
 
 <HEADER>.|\n {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
 }
 
 <HEADER_VALUE>.|\n {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
 }
 
 .|\n {
-  warcyyerror("flex: Unknown token: %s\n", yytext);
+  warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unknown token %s\n", yytext);
 }
 
 %%
+

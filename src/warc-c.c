@@ -22,6 +22,7 @@
 #include <stdlib.h>
 
 #include <warc-c/warc-c.h>
+#include <warc-c/warc_parser.h>
 
 #include "warc.tab.h"
 #define YYSTYPE WARCYYSTYPE
@@ -44,33 +45,41 @@ struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len) {
 
 struct warc_entry *warc_parse_file(FILE *f) {
   yyscan_t scanner;
-  struct warc_entry *entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
+  struct warc_parser *parser = warc_parser_create(&scanner);
 
-  if (!entry) {
+  if (!parser) {
     return NULL;
-  } else if (warc_entry_init(entry) || warcyylex_init(&scanner)) {
-    warc_entry_free(entry);
+  } else if (warcyylex_init_extra(parser, &scanner)) {
+    warc_parser_free(parser);
     return NULL;
   }
 
   // FIXME(dlroberton): remove this and add a parameter
-  // to enable it.
-  warcyyset_debug(1, scanner);
-
+  // to enable the equivalent of the following.
+  //
+  // warcyydebug = 1;
+  // warcyyset_debug(1, scanner);
   warcyyrestart(f, scanner);
-  if (warcyyparse(scanner, entry)) {
+  if (!warcyyparse(scanner, parser) && !warc_parser_state(parser)) {
     warcyylex_destroy(scanner);
-    return entry;
+    return warc_parser_consume(parser);
   } else {
-    warc_entry_free(entry);
+    warc_parser_free(parser);
     warcyylex_destroy(scanner);
     return NULL;
   }
 }
 
-void warcyyerror(const char *s, ...) {
+int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...) {
   va_list ap;
-  va_start(ap, s);
-  vfprintf(stderr, s, ap);
-  fprintf(stderr, "\n");
+  va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  va_end(ap);
+
+  // If an error has already occurred don't overwrite it.
+  if (!warc_parser_state(parser)) {
+    fprintf(stderr, "%s\n", "Setting the parser state to an error!");
+    warc_parser_set_state(parser, PARSER_STATE_MALFORMED);
+  }
+  return warc_parser_state(parser);
 }
