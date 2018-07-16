@@ -31,93 +31,109 @@
 
 struct warc_parser {
   enum warc_parser_state state;
+  int body_clrf_count;
   struct warc_entry *entry;
   yyscan_t scanner;
 };
 
 struct warc_parser *warc_parser_create(int debug) {
-  struct warc_parser *prsr = (struct warc_parser *)malloc(sizeof(struct warc_parser));
-  if (prsr) {
-    prsr->entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
-    if (prsr->entry) {
-      if (!warc_entry_init(prsr->entry)) {
-        prsr->state = PARSER_STATE_SUCCESS;
-        if (warcyylex_init_extra(prsr, &prsr->scanner)) {
-          warc_parser_free(prsr);
+  struct warc_parser *parser = (struct warc_parser *)malloc(sizeof(struct warc_parser));
+  if (parser) {
+    parser->entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
+    if (parser->entry) {
+      if (!warc_entry_init(parser->entry)) {
+        parser->state = PARSER_STATE_SUCCESS;
+        if (warcyylex_init_extra(parser, &parser->scanner)) {
+          warc_parser_free(parser);
         } else {
           if (debug) {
             warcyydebug = 1;
-            warcyyset_debug(1, prsr->scanner);
+            warcyyset_debug(1, parser->scanner);
           } else {
             warcyydebug = 0;
-            warcyyset_debug(0, prsr->scanner);
+            warcyyset_debug(0, parser->scanner);
           }
-          return prsr;
+          return parser;
         }
       } else {
-        free(prsr->entry);
-        free(prsr);
+        free(parser->entry);
+        free(parser);
       }
     } else {
-      free(prsr);
+      free(parser);
     }
   }
   return NULL;
 }
 
-void warc_parser_free(struct warc_parser *prsr) {
-  if (prsr) {
-    if (prsr->entry) {
-      free(prsr->entry);
+void warc_parser_free(struct warc_parser *parser) {
+  if (parser) {
+    if (parser->entry) {
+      free(parser->entry);
     }
-    if (prsr->scanner) {
-      warcyylex_destroy(prsr->scanner);
+    if (parser->scanner) {
+      warcyylex_destroy(parser->scanner);
     }
-    free(prsr);
+    free(parser);
   }
 }
 
-void parser_add_header(struct warc_parser *prsr, char *name, struct bytes_field *value) {
-  if (!warc_headers_add(&prsr->entry->headers, name, value)) {
-    prsr->state = PARSER_STATE_NO_MEM;
-    warcyyerror(prsr->scanner, prsr, "%s\n", "Error: No Memory!");
+void parser_add_header(struct warc_parser *parser, char *name, struct bytes_field *value) {
+  if (!warc_headers_add(&parser->entry->headers, name, value)) {
+    parser->state = PARSER_STATE_NO_MEM;
+    warcyyerror(parser->scanner, parser, "%s\n", "Error: No Memory!");
     bytes_field_free(value);
     free(name);
   }
 }
 
-void parser_set_block(struct warc_parser *prsr, struct bytes_field *value) {
-  prsr->entry->block = value;
+void parser_set_block(struct warc_parser *parser, struct bytes_field *value) {
+  parser->entry->block = value;
 }
 
-void parser_set_version(struct warc_parser *prsr, char *version) { prsr->entry->version = version; }
-
-struct warc_entry *warc_parser_consume(struct warc_parser *prsr) {
-  struct warc_entry *ret = NULL;
-  if (prsr->entry) {
-    ret = prsr->entry;
-    prsr->entry = NULL;
+void parser_extend_block(struct warc_parser *parser, struct bytes_field *value) {
+  if (!bytes_field_extend(parser->entry->block, value)) {
+    warcyyerror(parser->scanner, parser, "%s\n", "Error: No Memory!");
   }
-  warc_parser_free(prsr);
+  bytes_field_free(value);
+}
+
+void parser_set_version(struct warc_parser *parser, char *version) { parser->entry->version = version; }
+
+struct warc_entry *warc_parser_consume(struct warc_parser *parser) {
+  struct warc_entry *ret = NULL;
+  if (parser->entry) {
+    ret = parser->entry;
+    parser->entry = NULL;
+  }
+  warc_parser_free(parser);
   return ret;
 }
 
-enum warc_parser_state warc_parser_state(struct warc_parser *prsr) { return prsr->state; }
+enum warc_parser_state warc_parser_state(struct warc_parser *parser) { return parser->state; }
 
-void warc_parser_set_state(struct warc_parser *prsr, enum warc_parser_state state) {
-  prsr->state = state;
+void warc_parser_set_state(struct warc_parser *parser, enum warc_parser_state state) {
+  parser->state = state;
 }
 
-void *warc_parser_scanner(struct warc_parser *prsr) { return &prsr->scanner; }
+void *warc_parser_scanner(struct warc_parser *parser) { return &parser->scanner; }
 
-enum warc_parser_state warc_parser_parse_file(struct warc_parser* prsr, FILE* f) {
+enum warc_parser_state warc_parser_parse_file(struct warc_parser* parser, FILE* f) {
   int err;
 
-  warcyyrestart(f, prsr->scanner);
+  warcyyrestart(f, parser->scanner);
 
-  err = warcyyparse(prsr->scanner, prsr);
+  err = warcyyparse(parser->scanner, parser);
 
-  return (err && !prsr->state) ? PARSER_STATE_MALFORMED : prsr->state;
+  return (err && !parser->state) ? PARSER_STATE_MALFORMED : parser->state;
+}
+
+int flex_body_hit_crlf(struct warc_parser *parser) {
+  return parser->body_clrf_count++;
+}
+
+void flex_body_hit_noncrlf(struct warc_parser *parser) {
+  parser->body_clrf_count = 0;
 }
 
 int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...) {

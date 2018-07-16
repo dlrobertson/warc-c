@@ -76,8 +76,16 @@ warc_file:
   ;
 
 warc_record:
-  header CRLF BLOCK {
-    parser_set_block(parser, $3);
+  header CRLF block CRLF {
+  }
+  ;
+
+block:
+  BLOCK CRLF {
+    parser_set_block(parser, $1);
+  } |
+  block BLOCK CRLF {
+    parser_extend_block(parser, $2);
   }
   ;
 

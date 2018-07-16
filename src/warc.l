@@ -37,7 +37,7 @@
 
 TOKEN [\x21-\x39\x3b-\x7e]
 TEXT [\x20-\x7e]
-OCTET [\x00-\xff]
+OCTET [\x00-\x0c\x0e-\xff]
 LWS \r\n*[\t ]+
 CRLF \r\n
 WS [\t ]*
@@ -91,17 +91,26 @@ WS [\t ]*
   }
 }
 
-<BODY>{OCTET}*{CRLF}{CRLF} {
+<BODY>{OCTET}* {
   yylval->bytes = bytes_field_from_bytes((const uint8_t *)yytext, yyleng);
+  flex_body_hit_noncrlf(yyextra);
   if(yylval->bytes) {
-    BEGIN(INITIAL);
     return BLOCK;
   } else {
     warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex: Unable to allocate memory\n");
   }
 }
 
-<BODY>.|\n {
+<BODY>{CRLF} {
+  if (flex_body_hit_crlf(yyextra)) {
+    // This is the second CRLF, transition to the
+    // INITIAL state
+    BEGIN(INITIAL);
+  }
+  return CRLF;
+}
+
+<BODY>. {
   warcyyerror(warc_parser_scanner(yyextra), yyextra, "flex(BODY): Unknown token %s\n", yytext);
 }
 
@@ -118,4 +127,3 @@ WS [\t ]*
 }
 
 %%
-

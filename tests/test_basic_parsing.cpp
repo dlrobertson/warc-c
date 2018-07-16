@@ -32,7 +32,7 @@ TEST(SimpleWarcFile, first) {
   struct warc_header *header = NULL;
   FILE *f = fopen(TEST_FILES_EXAMPLES "/test.warc", "r");
   if (f) {
-    entry = warc_parse_file(f, 0);
+    entry = warc_parse_file(f, 1);
     ASSERT_TRUE(entry != NULL);
     ASSERT_TRUE(entry->version != NULL);
     ASSERT_EQ(strcmp(entry->version, "WARC/1.0"), 0);
@@ -63,7 +63,7 @@ TEST(SimpleWarcFile, first) {
     // Check the block
     ASSERT_TRUE(entry->block);
     ASSERT_EQ(
-        strncmp((const char *)entry->block->bytes, "Hello, World!\r\n\r\n", entry->block->len), 0);
+        strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len), 0);
     warc_entry_free(entry);
   }
 }

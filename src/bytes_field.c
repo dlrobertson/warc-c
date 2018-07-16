@@ -23,6 +23,10 @@
 
 #include <warc-c/bytes_field.h>
 
+#define CRLF_LEN 2
+
+const char CRLF_BYTES[2] = {'\r', '\n'};
+
 struct bytes_field *bytes_field_from_bytes(const uint8_t *bytes, size_t len) {
   struct bytes_field *field = NULL;
   if (len > 0) {
@@ -43,6 +47,22 @@ struct bytes_field *bytes_field_from_bytes(const uint8_t *bytes, size_t len) {
 
 struct bytes_field *bytes_field_copy(const struct bytes_field *value) {
   return bytes_field_from_bytes(value->bytes, value->len);
+}
+
+struct bytes_field *bytes_field_extend(struct bytes_field *field,
+                                       const struct bytes_field *value) {
+  uint8_t *tmp = NULL;
+  if (value->len > 0) {
+    tmp = realloc(field->bytes, field->len + value->len + CRLF_LEN);
+    if (tmp) {
+      field->bytes = tmp;
+      memcpy(field->bytes + field->len, CRLF_BYTES, CRLF_LEN);
+      memcpy(field->bytes + field->len + CRLF_LEN, value->bytes, value->len);
+      field->len += value->len + CRLF_LEN;
+      return field;
+    }
+  }
+  return NULL;
 }
 
 void bytes_field_free(struct bytes_field *field) {

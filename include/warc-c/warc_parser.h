@@ -37,24 +37,33 @@ struct warc_parser;
 
 struct warc_parser *warc_parser_create(int debug);
 
-void warc_parser_free(struct warc_parser *prsr);
+void warc_parser_free(struct warc_parser *parser);
 
-void parser_add_header(struct warc_parser *prsr, char *name, struct bytes_field *value);
+void parser_add_header(struct warc_parser *parser, char *name, struct bytes_field *value);
 
-void parser_set_block(struct warc_parser *prsr, struct bytes_field *value);
+void parser_set_block(struct warc_parser *parser, struct bytes_field *value);
 
-void parser_set_version(struct warc_parser *prsr, char *version);
+void parser_extend_block(struct warc_parser *parser, struct bytes_field *value);
 
-struct warc_entry *warc_parser_consume(struct warc_parser *prsr);
+void parser_set_version(struct warc_parser *parser, char *version);
 
-enum warc_parser_state warc_parser_state(struct warc_parser *prsr);
+struct warc_entry *warc_parser_consume(struct warc_parser *parser);
 
-void warc_parser_set_state(struct warc_parser *prsr, enum warc_parser_state state);
+enum warc_parser_state warc_parser_state(struct warc_parser *parser);
 
-void *warc_parser_scanner(struct warc_parser *prsr);
+void warc_parser_set_state(struct warc_parser *parser, enum warc_parser_state state);
 
-enum warc_parser_state warc_parser_parse_file(struct warc_parser* prsr, FILE* f);
+void *warc_parser_scanner(struct warc_parser *parser);
+
+enum warc_parser_state warc_parser_parse_file(struct warc_parser* parser, FILE* f);
 
 int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...);
+
+// Helper funtions used by flex to ensure the transition from parsing tokens
+// int the WARC record BODY to the INITIAL state happens at the right time.
+
+int flex_body_hit_crlf(struct warc_parser *parser);
+
+void flex_body_hit_noncrlf(struct warc_parser *parser);
 
 #endif
