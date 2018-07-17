@@ -23,8 +23,13 @@
 
 #include <warc-c/warc_headers.h>
 
+struct warc_version {
+  int major;
+  int minor;
+};
+
 struct warc_entry {
-  char *version;
+  struct warc_version version;
   struct warc_headers headers;
   struct bytes_field *block;
 };

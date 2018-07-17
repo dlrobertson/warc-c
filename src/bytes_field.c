@@ -49,8 +49,7 @@ struct bytes_field *bytes_field_copy(const struct bytes_field *value) {
   return bytes_field_from_bytes(value->bytes, value->len);
 }
 
-struct bytes_field *bytes_field_extend(struct bytes_field *field,
-                                       const struct bytes_field *value) {
+struct bytes_field *bytes_field_extend(struct bytes_field *field, const struct bytes_field *value) {
   uint8_t *tmp = NULL;
   if (value->len > 0) {
     tmp = realloc(field->bytes, field->len + value->len + CRLF_LEN);

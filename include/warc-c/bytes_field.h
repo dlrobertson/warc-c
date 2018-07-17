@@ -32,8 +32,7 @@ struct bytes_field *bytes_field_copy(const struct bytes_field *value);
 
 struct bytes_field *bytes_field_from_bytes(const uint8_t *bytes, size_t len);
 
-struct bytes_field *bytes_field_extend(struct bytes_field *field,
-                                       const struct bytes_field *value);
+struct bytes_field *bytes_field_extend(struct bytes_field *field, const struct bytes_field *value);
 
 void bytes_field_free(struct bytes_field *field);
 

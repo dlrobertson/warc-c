@@ -45,7 +45,7 @@ void parser_set_block(struct warc_parser *parser, struct bytes_field *value);
 
 void parser_extend_block(struct warc_parser *parser, struct bytes_field *value);
 
-void parser_set_version(struct warc_parser *parser, char *version);
+void parser_set_version(struct warc_parser *parser, int major, int minor);
 
 struct warc_entry *warc_parser_consume(struct warc_parser *parser);
 
@@ -55,7 +55,7 @@ void warc_parser_set_state(struct warc_parser *parser, enum warc_parser_state st
 
 void *warc_parser_scanner(struct warc_parser *parser);
 
-enum warc_parser_state warc_parser_parse_file(struct warc_parser* parser, FILE* f);
+enum warc_parser_state warc_parser_parse_file(struct warc_parser *parser, FILE *f);
 
 int warcyyerror(void *scanner, struct warc_parser *parser, const char *fmt, ...);
 

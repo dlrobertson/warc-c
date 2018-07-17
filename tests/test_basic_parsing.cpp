@@ -34,8 +34,8 @@ TEST(SimpleWarcFile, first) {
   if (f) {
     entry = warc_parse_file(f, 0);
     ASSERT_TRUE(entry != NULL);
-    ASSERT_TRUE(entry->version != NULL);
-    ASSERT_EQ(strcmp(entry->version, "WARC/1.0"), 0);
+    ASSERT_EQ(entry->version.major, 1);
+    ASSERT_EQ(entry->version.minor, 0);
 
     // First Header
     header = warc_headers_find(&entry->headers, "Something");
@@ -62,8 +62,7 @@ TEST(SimpleWarcFile, first) {
 
     // Check the block
     ASSERT_TRUE(entry->block);
-    ASSERT_EQ(
-        strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len), 0);
+    ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len), 0);
     warc_entry_free(entry);
   }
 }
@@ -75,8 +74,8 @@ TEST(SimpleWarcFile, bbc) {
   if (f) {
     entry = warc_parse_file(f, 0);
     ASSERT_TRUE(entry != NULL);
-    ASSERT_TRUE(entry->version != NULL);
-    ASSERT_EQ(strcmp(entry->version, "WARC/1.0"), 0);
+    ASSERT_EQ(entry->version.major, 1);
+    ASSERT_EQ(entry->version.minor, 0);
 
     // First Header
     header = warc_headers_find(&entry->headers, "WARC-Type");

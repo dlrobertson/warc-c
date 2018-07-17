@@ -53,9 +53,18 @@ WS [\t ]*
   return CRLF;
 }
 
-^WARC"/"1.0 {
+^WARC {
   yylval->str = strndup(yytext, yyleng);
   return VERSION;
+}
+
+"/"|"." {
+  return yytext[0];
+}
+
+[0-9]+ {
+  yylval->num = atoi(yytext);
+  return NUMBER;
 }
 
 <<EOF>> {

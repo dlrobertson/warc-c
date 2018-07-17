@@ -39,20 +39,25 @@
 %union {
   char* str;
   struct bytes_field* bytes;
+  int num;
 }
 
 /* Well known token strings */
-%token CRLF TWOCRLF COLON
-
+%token CRLF
+%token COLON
+%token NUMBER
 %token VERSION
 %token BLOCK
 %token TOKEN TEXT
 
 %type<bytes> TEXT
+%type<bytes> BLOCK
+
 %type<str> TOKEN
 %type<str> field_name
 %type<str> VERSION
-%type<bytes> BLOCK
+
+%type<num> NUMBER
 
 
 /*
@@ -94,8 +99,8 @@ header:
   ;
 
 version:
-  VERSION CRLF {
-    parser_set_version(parser, $1);
+  VERSION '/' NUMBER '.' NUMBER CRLF {
+    parser_set_version(parser, $3, $5);
   }
   ;
 
