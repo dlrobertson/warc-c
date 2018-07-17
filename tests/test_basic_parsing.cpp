@@ -32,7 +32,7 @@ TEST(SimpleWarcFile, first) {
   struct warc_header *header = NULL;
   FILE *f = fopen(TEST_FILES_EXAMPLES "/test.warc", "r");
   if (f) {
-    entry = warc_parse_file(f, 1);
+    entry = warc_parse_file(f, 0);
     ASSERT_TRUE(entry != NULL);
     ASSERT_TRUE(entry->version != NULL);
     ASSERT_EQ(strcmp(entry->version, "WARC/1.0"), 0);
