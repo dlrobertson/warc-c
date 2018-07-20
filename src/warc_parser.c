@@ -22,6 +22,7 @@
 #include <stdlib.h>
 
 #include <warc-c/warc_entry.h>
+#include <warc-c/warc_file.h>
 #include <warc-c/warc_headers.h>
 #include <warc-c/warc_parser.h>
 
@@ -33,6 +34,7 @@ struct warc_parser {
   enum warc_parser_state state;
   int body_clrf_count;
   struct warc_entry *entry;
+  struct warc_file *file;
   yyscan_t scanner;
 };
 
@@ -53,7 +55,12 @@ struct warc_parser *warc_parser_create(int debug) {
             warcyydebug = 0;
             warcyyset_debug(0, parser->scanner);
           }
-          return parser;
+          parser->file = warc_file_create();
+          if (parser->file) {
+            return parser;
+          } else {
+            warc_parser_free(parser);
+          }
         }
       } else {
         free(parser->entry);
@@ -69,12 +76,34 @@ struct warc_parser *warc_parser_create(int debug) {
 void warc_parser_free(struct warc_parser *parser) {
   if (parser) {
     if (parser->entry) {
-      free(parser->entry);
+      warc_entry_free(parser->entry);
+    }
+    if (parser->file) {
+      warc_file_free(parser->file);
     }
     if (parser->scanner) {
       warcyylex_destroy(parser->scanner);
     }
     free(parser);
+  }
+}
+
+struct warc_entry* parser_consume_entry(struct warc_parser *parser) {
+  struct warc_entry *entry = parser->entry;
+  parser->entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
+  if (parser->entry) {
+    if (!warc_entry_init(parser->entry)) {
+      return entry;
+    }
+  }
+  warc_entry_free(entry);
+  warcyyerror(parser->scanner, parser, "%s\n", "Error: No Memory!");
+  return NULL;
+}
+
+void parser_push_entry(struct warc_parser *parser, struct warc_entry *entry) {
+  if (entry) {
+    warc_file_add(parser->file, entry);
   }
 }
 
@@ -103,14 +132,14 @@ void parser_set_version(struct warc_parser *parser, int major, int minor) {
   parser->entry->version.minor = minor;
 }
 
-struct warc_entry *warc_parser_consume(struct warc_parser *parser) {
-  struct warc_entry *ret = NULL;
-  if (parser->entry) {
-    ret = parser->entry;
-    parser->entry = NULL;
+struct warc_file *warc_parser_consume(struct warc_parser *parser) {
+  struct warc_file *file = NULL;
+  if (parser->file) {
+    file = parser->file;
+    parser->file = NULL;
   }
   warc_parser_free(parser);
-  return ret;
+  return file;
 }
 
 enum warc_parser_state warc_parser_state(struct warc_parser *parser) { return parser->state; }

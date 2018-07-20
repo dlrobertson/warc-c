@@ -39,6 +39,7 @@
 %union {
   char* str;
   struct bytes_field* bytes;
+  struct warc_entry* record;
   int num;
 }
 
@@ -59,6 +60,8 @@
 
 %type<num> NUMBER
 
+%type<record> warc_record
+
 
 /*
 FIXME(dlrobertson): Add this to add WARC file parsing. This should probably
@@ -75,13 +78,17 @@ warc_file:
 %%
 
 warc_file:
-  /* empty */ |
-  warc_record |
-  warc_record warc_record
+  warc_record {
+    parser_push_entry(parser, $1);
+  } |
+  warc_record warc_file {
+    parser_push_entry(parser, $1);
+  }
   ;
 
 warc_record:
   header CRLF block CRLF {
+    $$ = parser_consume_entry(parser);
   }
   ;
 

@@ -24,7 +24,7 @@
 #include <stdio.h>
 
 #include <warc-c/bytes_field.h>
-#include <warc-c/warc_entry.h>
+#include <warc-c/warc_file.h>
 
 enum warc_parser_state {
   PARSER_STATE_SUCCESS = 0,
@@ -39,6 +39,10 @@ struct warc_parser *warc_parser_create(int debug);
 
 void warc_parser_free(struct warc_parser *parser);
 
+struct warc_entry* parser_consume_entry(struct warc_parser *parser);
+
+void parser_push_entry(struct warc_parser *parser, struct warc_entry *entry);
+
 void parser_add_header(struct warc_parser *parser, char *name, struct bytes_field *value);
 
 void parser_set_block(struct warc_parser *parser, struct bytes_field *value);
@@ -47,7 +51,7 @@ void parser_extend_block(struct warc_parser *parser, struct bytes_field *value);
 
 void parser_set_version(struct warc_parser *parser, int major, int minor);
 
-struct warc_entry *warc_parser_consume(struct warc_parser *parser);
+struct warc_file *warc_parser_consume(struct warc_parser *parser);
 
 enum warc_parser_state warc_parser_state(struct warc_parser *parser);
 

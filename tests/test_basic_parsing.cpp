@@ -28,51 +28,81 @@ extern "C" {
 #include "util.hpp"
 
 TEST(SimpleWarcFile, first) {
+  struct warc_file *file = NULL;
+  struct warc_file_entry *node = NULL;
   struct warc_entry *entry = NULL;
   struct warc_header *header = NULL;
   FILE *f = fopen(TEST_FILES_EXAMPLES "/test.warc", "r");
-  if (f) {
-    entry = warc_parse_file(f, 0);
-    ASSERT_TRUE(entry != NULL);
-    ASSERT_EQ(entry->version.major, 1);
-    ASSERT_EQ(entry->version.minor, 0);
+  int i = 0;
+  file = warc_parse_file(f, 1);
+  FOREACH_ENTRY(file, node) {
+    ++i;
+    if (i == 0) {
+      ASSERT_TRUE(node);
+      entry = warc_file_entry_item(node);
+      ASSERT_TRUE(entry != NULL);
+      ASSERT_EQ(entry->version.major, 1);
+      ASSERT_EQ(entry->version.minor, 0);
 
-    // First Header
-    header = warc_headers_find(&entry->headers, "Something");
-    ASSERT_TRUE(header);
-    ASSERT_EQ(strcmp(header->name, "Something"), 0);
-    ASSERT_EQ(strncmp((const char *)header->value->bytes, "Else", header->value->len), 0);
+      // First Header
+      header = warc_headers_find(&entry->headers, "Something");
+      ASSERT_TRUE(header);
+      ASSERT_EQ(strcmp(header->name, "Something"), 0);
+      ASSERT_EQ(strncmp((const char *)header->value->bytes, "Else", header->value->len), 0);
 
-    // Second Header
-    header = warc_headers_find(&entry->headers, "And0");
-    ASSERT_TRUE(header);
-    ASSERT_EQ(strcmp(header->name, "And0"), 0);
-    ASSERT_FALSE(header->value);
+      // Second Header
+      header = warc_headers_find(&entry->headers, "And0");
+      ASSERT_TRUE(header);
+      ASSERT_EQ(strcmp(header->name, "And0"), 0);
+      ASSERT_FALSE(header->value);
 
-    // Third Header
-    header = warc_headers_find(&entry->headers, "And1");
-    ASSERT_TRUE(header);
-    ASSERT_EQ(strcmp(header->name, "And1"), 0);
-    ASSERT_EQ(strncmp((const char *)header->value->bytes, "Multiple\r\n Lines", header->value->len),
-              0);
+      // Third Header
+      header = warc_headers_find(&entry->headers, "And1");
+      ASSERT_TRUE(header);
+      ASSERT_EQ(strcmp(header->name, "And1"), 0);
+      ASSERT_EQ(strncmp((const char *)header->value->bytes, "Multiple\r\n Lines", header->value->len),
+                0);
 
-    // Not a header
-    header = warc_headers_find(&entry->headers, "Not Found");
-    ASSERT_FALSE(header);
+      // Not a header
+      header = warc_headers_find(&entry->headers, "Not Found");
+      ASSERT_FALSE(header);
 
-    // Check the block
-    ASSERT_TRUE(entry->block);
-    ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len), 0);
-    warc_entry_free(entry);
+      // Check the block
+      ASSERT_TRUE(entry->block);
+      ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len), 0);
+    } else if (i == 1) {
+      ASSERT_TRUE(node);
+      entry = warc_file_entry_item(node);
+      ASSERT_TRUE(entry != NULL);
+      ASSERT_EQ(entry->version.major, 1);
+      ASSERT_EQ(entry->version.minor, 0);
+
+      // First Header
+      header = warc_headers_find(&entry->headers, "Wait");
+      ASSERT_TRUE(header);
+      ASSERT_EQ(strcmp(header->name, "Wait"), 0);
+      ASSERT_EQ(strncmp((const char *)header->value->bytes, "There", header->value->len), 0);
+
+      // Check the block
+      ASSERT_TRUE(entry->block);
+      ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Is another entry!", entry->block->len), 0);
+    }
   }
+  ASSERT_EQ(i, 2);
+  warc_file_free(file);
 }
 
 TEST(SimpleWarcFile, bbc) {
   struct warc_entry *entry = NULL;
+  struct warc_file *file = NULL;
+  struct warc_file_entry *node = NULL;
   struct warc_header *header = NULL;
   FILE *f = fopen(TEST_FILES_EXAMPLES "/bbc.warc", "r");
-  if (f) {
-    entry = warc_parse_file(f, 0);
+  int i = 0;
+  file = warc_parse_file(f, 0);
+  FOREACH_ENTRY(file, node) {
+    ++i;
+    entry = warc_file_entry_item(node);
     ASSERT_TRUE(entry != NULL);
     ASSERT_EQ(entry->version.major, 1);
     ASSERT_EQ(entry->version.minor, 0);
@@ -85,4 +115,5 @@ TEST(SimpleWarcFile, bbc) {
 
     warc_entry_free(entry);
   }
+  ASSERT_EQ(i, 1);
 }

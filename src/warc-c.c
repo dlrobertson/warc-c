@@ -27,27 +27,7 @@
 #define YYSTYPE WARCYYSTYPE
 #include "warc.lex.h"
 
-// FIXME(dlrobertson): This does not work at all.
-struct warc_entry *warc_parse_buffer(const char *bytes, unsigned int len, int debug) {
-  yyscan_t scanner;
-  YY_BUFFER_STATE buf;
-
-  warcyylex_init(&scanner);
-
-  if (debug) {
-    warcyydebug = 1;
-    warcyyset_debug(1, scanner);
-  }
-
-  buf = warcyy_scan_bytes(bytes, len, scanner);
-
-  warcyy_delete_buffer(buf, scanner);
-  warcyylex_destroy(scanner);
-
-  return NULL;
-}
-
-struct warc_entry *warc_parse_file(FILE *f, int debug) {
+struct warc_file *warc_parse_file(FILE *f, int debug) {
   struct warc_parser *parser = warc_parser_create(debug);
 
   if (!parser) {

@@ -18,31 +18,39 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <stdlib.h>
+#ifndef WARC_C_WARC_FILE
+#define WARC_C_WARC_FILE
 
 #include <warc-c/warc_entry.h>
 
-int warc_entry_init(struct warc_entry *entry) {
-  if (entry) {
-    entry->version.major = 0;
-    entry->version.minor = 0;
-    entry->block = NULL;
-    if (warc_headers_init(&entry->headers)) {
-      return -1;
-    } else {
-      return 0;
-    }
-  } else {
-    return -1;
-  }
-}
+struct warc_file_entry;
 
-void warc_entry_free(struct warc_entry *entry) {
-  if (entry) {
-    warc_headers_free(&entry->headers);
-    if (entry->block) {
-      bytes_field_free(entry->block);
-    }
-    free(entry);
-  }
-}
+struct warc_file_entry *warc_file_entry_next(struct warc_file_entry *entry);
+
+struct warc_file_entry *warc_file_entry_prev(struct warc_file_entry *entry);
+
+struct warc_entry *warc_file_entry_item(struct warc_file_entry *entry);
+
+struct warc_file;
+
+struct warc_file *warc_file_create(void);
+
+struct warc_file_entry *warc_file_head(struct warc_file *file);
+
+struct warc_file_entry *warc_file_tail(struct warc_file *file);
+
+struct warc_file_entry *warc_file_add(struct warc_file* file, struct warc_entry* entry);
+
+void warc_file_free(struct warc_file *);
+
+#define FOREACH_ENTRY(file, file_entry) \
+    for (file_entry = warc_file_head(file); \
+         file_entry != NULL; \
+         file_entry = warc_file_entry_next(file_entry))
+
+#define FOREACH_ENTRY_REVERSE(file, file_entry) \
+    for (file_entry = warc_file_tail(file); \
+         file_entry != NULL; \
+         file_entry = warc_file_entry_prev(file_entry))
+
+#endif
