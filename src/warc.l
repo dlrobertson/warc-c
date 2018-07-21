@@ -54,7 +54,6 @@ WS [\t ]*
 }
 
 ^WARC {
-  yylval->str = strndup(yytext, yyleng);
   return VERSION;
 }
 

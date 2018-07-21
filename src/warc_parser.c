@@ -88,7 +88,7 @@ void warc_parser_free(struct warc_parser *parser) {
   }
 }
 
-struct warc_entry* parser_consume_entry(struct warc_parser *parser) {
+struct warc_entry *parser_consume_entry(struct warc_parser *parser) {
   struct warc_entry *entry = parser->entry;
   parser->entry = (struct warc_entry *)malloc(sizeof(struct warc_entry));
   if (parser->entry) {

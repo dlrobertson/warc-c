@@ -39,7 +39,7 @@ struct warc_parser *warc_parser_create(int debug);
 
 void warc_parser_free(struct warc_parser *parser);
 
-struct warc_entry* parser_consume_entry(struct warc_parser *parser);
+struct warc_entry *parser_consume_entry(struct warc_parser *parser);
 
 void parser_push_entry(struct warc_parser *parser, struct warc_entry *entry);
 

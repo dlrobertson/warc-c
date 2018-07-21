@@ -32,7 +32,8 @@ struct warc_file_entry {
 
 struct warc_file_entry *warc_file_entry_create_child(struct warc_file_entry *parent_entry,
                                                      struct warc_entry *entry) {
-  struct warc_file_entry *child_entry = (struct warc_file_entry *)malloc(sizeof(struct warc_file_entry));
+  struct warc_file_entry *child_entry =
+      (struct warc_file_entry *)malloc(sizeof(struct warc_file_entry));
 
   assert(parent_entry != NULL);
 
@@ -52,7 +53,8 @@ struct warc_file_entry *warc_file_entry_create_child(struct warc_file_entry *par
 
 struct warc_file_entry *warc_file_entry_create_parent(struct warc_file_entry *child_entry,
                                                       struct warc_entry *entry) {
-  struct warc_file_entry *parent_entry = (struct warc_file_entry *)malloc(sizeof(struct warc_file_entry));
+  struct warc_file_entry *parent_entry =
+      (struct warc_file_entry *)malloc(sizeof(struct warc_file_entry));
 
   assert(child_entry != NULL);
 
@@ -103,7 +105,7 @@ struct warc_file_entry *warc_file_tail(struct warc_file *file) {
   return file->tail;
 }
 
-struct warc_file_entry *warc_file_add(struct warc_file* file, struct warc_entry* entry) {
+struct warc_file_entry *warc_file_add(struct warc_file *file, struct warc_entry *entry) {
   if (file->tail) {
     file->tail = warc_file_entry_create_child(file->tail, entry);
     if (file->tail) {
@@ -122,11 +124,15 @@ struct warc_file_entry *warc_file_add(struct warc_file* file, struct warc_entry*
   return NULL;
 }
 
-void warc_file_free(struct warc_file* file) {
-  struct warc_file_entry* entry;
+void warc_file_free(struct warc_file *file) {
+  struct warc_file_entry *entry, *tmp;
   if (file) {
-    FOREACH_ENTRY(file, entry) {
+    entry = file->head;
+    while (entry) {
+      tmp = entry->next;
       warc_entry_free(entry->entry);
+      free(entry);
+      entry = tmp;
     }
     free(file);
   }

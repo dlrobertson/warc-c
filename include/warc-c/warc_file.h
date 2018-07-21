@@ -39,18 +39,16 @@ struct warc_file_entry *warc_file_head(struct warc_file *file);
 
 struct warc_file_entry *warc_file_tail(struct warc_file *file);
 
-struct warc_file_entry *warc_file_add(struct warc_file* file, struct warc_entry* entry);
+struct warc_file_entry *warc_file_add(struct warc_file *file, struct warc_entry *entry);
 
 void warc_file_free(struct warc_file *);
 
-#define FOREACH_ENTRY(file, file_entry) \
-    for (file_entry = warc_file_head(file); \
-         file_entry != NULL; \
-         file_entry = warc_file_entry_next(file_entry))
+#define FOREACH_ENTRY(file, file_entry)                                                            \
+  for (file_entry = warc_file_head(file); file_entry != NULL;                                      \
+       file_entry = warc_file_entry_next(file_entry))
 
-#define FOREACH_ENTRY_REVERSE(file, file_entry) \
-    for (file_entry = warc_file_tail(file); \
-         file_entry != NULL; \
-         file_entry = warc_file_entry_prev(file_entry))
+#define FOREACH_ENTRY_REVERSE(file, file_entry)                                                    \
+  for (file_entry = warc_file_tail(file); file_entry != NULL;                                      \
+       file_entry = warc_file_entry_prev(file_entry))
 
 #endif

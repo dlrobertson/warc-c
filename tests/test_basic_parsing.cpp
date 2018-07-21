@@ -60,8 +60,8 @@ TEST(SimpleWarcFile, first) {
       header = warc_headers_find(&entry->headers, "And1");
       ASSERT_TRUE(header);
       ASSERT_EQ(strcmp(header->name, "And1"), 0);
-      ASSERT_EQ(strncmp((const char *)header->value->bytes, "Multiple\r\n Lines", header->value->len),
-                0);
+      ASSERT_EQ(
+          strncmp((const char *)header->value->bytes, "Multiple\r\n Lines", header->value->len), 0);
 
       // Not a header
       header = warc_headers_find(&entry->headers, "Not Found");
@@ -69,7 +69,8 @@ TEST(SimpleWarcFile, first) {
 
       // Check the block
       ASSERT_TRUE(entry->block);
-      ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len), 0);
+      ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Hello,\r\nWorld!", entry->block->len),
+                0);
     } else if (i == 1) {
       ASSERT_TRUE(node);
       entry = warc_file_entry_item(node);
@@ -85,7 +86,8 @@ TEST(SimpleWarcFile, first) {
 
       // Check the block
       ASSERT_TRUE(entry->block);
-      ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Is another entry!", entry->block->len), 0);
+      ASSERT_EQ(strncmp((const char *)entry->block->bytes, "Is another entry!", entry->block->len),
+                0);
     }
   }
   ASSERT_EQ(i, 2);
@@ -112,8 +114,7 @@ TEST(SimpleWarcFile, bbc) {
     ASSERT_TRUE(header);
     ASSERT_EQ(strcmp(header->name, "WARC-Type"), 0);
     ASSERT_EQ(strncmp((const char *)header->value->bytes, "response", header->value->len), 0);
-
-    warc_entry_free(entry);
   }
   ASSERT_EQ(i, 1);
+  warc_file_free(file);
 }
