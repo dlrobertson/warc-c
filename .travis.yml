@@ -1,0 +1,16 @@
+language: c
+dist: trusty
+sudo: require
+compiler:
+  - clang
+env:
+  - GEN="Unix Makefiles" BUILD_TYPE=Release
+  - GEN="Unix Makefiles" BUILD_TYPE=Debug
+  - GEN="Unix Makefiles" BUILD_TYPE=ASAN
+addons:
+  apt:
+    packages:
+      - cmake3
+      - ninja
+script:
+    - ./.travis.sh
