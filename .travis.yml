@@ -2,7 +2,7 @@ language: c
 dist: trusty
 sudo: require
 compiler:
-  - clang
+  - gcc
 env:
   - GEN="Unix Makefiles" BUILD_TYPE=Release
   - GEN="Unix Makefiles" BUILD_TYPE=Debug
